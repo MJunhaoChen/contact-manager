@@ -41,12 +41,14 @@ const filteredContacts = computed(() => {
   if (tab.value === 'favorites') {
     list = list.filter(c => c.favorite)
   }
-  if (!q) return list
-  return list.filter(c =>
-    c.name.toLowerCase().includes(q) ||
-    c.email.toLowerCase().includes(q) ||
-    String(c.phone).toLowerCase().includes(q)
-  )
+  if (q) {
+    list = list.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      c.email.toLowerCase().includes(q) ||
+      String(c.phone).toLowerCase().includes(q)
+    )
+  }
+  return [...list].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
 })
 
 onMounted(() => {
