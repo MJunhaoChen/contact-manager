@@ -3,6 +3,10 @@
     <div class="card-header">
       <h3>{{ contact.name }}</h3>
       <div class="actions">
+        <button class="favorite" @click="onToggleFavorite" :aria-label="contact.favorite ? 'Unfavorite' : 'Favorite'">
+          <span v-if="contact.favorite">★</span>
+          <span v-else>☆</span>
+        </button>
         <router-link :to="`/edit/${contact.id}`" class="edit">Edit</router-link>
         <button class="delete" @click="onDelete">Delete</button>
       </div>
@@ -16,10 +20,13 @@
 
 <script setup>
 const props = defineProps(['contact'])
-const emit = defineEmits(['delete'])
+const emit = defineEmits(['delete', 'toggle-favorite'])
 
 function onDelete() {
   emit('delete', props.contact.id)
+}
+function onToggleFavorite() {
+  emit('toggle-favorite', props.contact.id)
 }
 </script>
 
@@ -49,6 +56,20 @@ function onDelete() {
 .actions {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+}
+.favorite {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #f6ad55;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  transition: color 0.2s;
+  line-height: 1;
+}
+.favorite:hover {
+  color: #ed8936;
 }
 
 .edit {

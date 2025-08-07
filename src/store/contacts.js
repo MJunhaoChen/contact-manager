@@ -9,7 +9,7 @@ export const useContactStore = defineStore('contacts', {
             this.contacts = JSON.parse(localStorage.getItem('contacts') || '[]')
         },
         addContact(contact) {
-            this.contacts.push(contact)
+            this.contacts.push({ ...contact, favorite: contact.favorite ?? false })
             this.save()
         },
         updateContact(updated) {
@@ -22,6 +22,13 @@ export const useContactStore = defineStore('contacts', {
         deleteContact(id) {
             this.contacts = this.contacts.filter(c => c.id !== id)
             this.save()
+        },
+        toggleFavorite(id) {
+            const contact = this.contacts.find(c => c.id === id)
+            if (contact) {
+                contact.favorite = !contact.favorite
+                this.save()
+            }
         },
         save() {
             localStorage.setItem('contacts', JSON.stringify(this.contacts))
