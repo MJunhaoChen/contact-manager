@@ -1,18 +1,23 @@
 <template>
   <div class="edit-contact">
     <h2>Edit Contact</h2>
+    <Toast :show="showToast" :key="toastKey">
+      <ul v-if="toastMessages.length">
+        <li v-for="msg in toastMessages" :key="msg">{{ msg }}</li>
+      </ul>
+    </Toast>
     <form @submit.prevent="saveContact">
       <div class="form-group">
         <label for="name">Name</label>
-        <input id="name" v-model="contact.name" type="text" required />
+        <input id="name" v-model="contact.name" type="text" />
       </div>
       <div class="form-group">
         <label for="email">Email</label>
-        <input id="email" v-model="contact.email" type="email" required />
+        <input id="email" v-model="contact.email" type="text" autocomplete="off" />
       </div>
       <div class="form-group">
         <label for="phone">Phone</label>
-        <input id="phone" v-model="contact.phone" type="tel" required />
+        <input id="phone" v-model="contact.phone" type="text" autocomplete="off" />
       </div>
       <div class="actions">
         <button type="submit" class="save">Save</button>
@@ -26,11 +31,32 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useContactStore } from '../store/contacts'
+import * as yup from 'yup'
+import Toast from '../components/Toast.vue'
 
 const route = useRoute()
 const router = useRouter()
 const store = useContactStore()
 const contact = ref({ name: '', email: '', phone: '' })
+
+const showToast = ref(false)
+const toastMessages = ref([])
+const toastKey = ref(0)
+
+const schema = yup.object({
+  name: yup.string().required('Name is required'),
+  email: yup
+    .string()
+    .required('Email is required')
+    .matches(
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      'Enter a valid email address'
+    ),
+  phone: yup
+    .string()
+    .required('Phone number is required')
+    .matches(/^06\d{8}$/, 'Dutch mobile: must start with 06 and be 10 digits (numbers only)')
+})
 
 onMounted(() => {
   const id = route.params.id
@@ -42,9 +68,21 @@ onMounted(() => {
   }
 })
 
-function saveContact() {
-  store.updateContact({ ...contact.value })
-  router.push('/')
+async function saveContact() {
+  try {
+    await schema.validate(contact.value, { abortEarly: false })
+    toastMessages.value = []
+    showToast.value = false
+    store.updateContact({ ...contact.value })
+    router.push('/')
+  } catch (err) {
+    if (err.inner) {
+      toastMessages.value = err.inner.map(e => e.message)
+      showToast.value = false
+      toastKey.value++
+      setTimeout(() => { showToast.value = true }, 0)
+    }
+  }
 }
 
 function cancelEdit() {
